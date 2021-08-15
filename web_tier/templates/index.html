@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Image Upload</title>
+</head>
+<body>
+    <h1>Upload Image</h1>
+    <br>
+    <p id = "status"></p>
+
+    <input id="inp" type='file' multiple>
+    <input type="submit" value="Upload Image" onclick="sendToServer()">
+
+    <br><br>
+    <input type="submit" value="Get Results" onclick="fetchResults()">
+    <input type="submit" value="Reset" onclick="reset()">
+    <pre id="result"></pre>
+
+    <script>
+        // holds the returned predictions after they have been fetched 
+        var results = "Results: <br/>"
+        // Post the selected img as xml http request to flask app, is triggered when submit button is clicked
+        function sendToServer() {
+            document.getElementById("result").innerHTML = "Uploading, please wait..."
+            var data = new FormData();
+            
+            var imageToSend = document.getElementById("inp").files
+            
+            for (var i = 0; i < imageToSend.length; i++){
+                data.append("img", imageToSend[i], imageToSend[i].name);
+            }
+            
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            // listens for http response
+            xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    var jsonPretty = JSON.stringify(JSON.parse(this.responseText)['message'],null,2).split("\"")[1];
+                    document.getElementById("result").innerHTML = jsonPretty;
+                }
+            });
+
+            xhr.open("POST", "classify");
+            xhr.send(data);
+        }
+            
+        function fetchResults() {
+
+            document.getElementById("result").innerHTML = "Fetching Results..."
+            
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            // listen for response to request
+            xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    results = this.responseText;
+                    document.getElementById("result").innerHTML = results;
+                }
+            })
+            xhr.open("GET", "results");
+            xhr.send();
+        }
+
+        function reset() {
+            document.getElementById("result").innerHTML = "Resetting S3 buckets and response queue..."
+            
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            // listens for response
+            xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    var jsonPretty = JSON.stringify(JSON.parse(this.responseText)['message'],null,2).split("\"")[1];
+                    document.getElementById("result").innerHTML = jsonPretty;
+                }
+            })
+            xhr.open("POST", "reset");
+            xhr.send();
+        }
+    </script>
+</body>
+</html>
