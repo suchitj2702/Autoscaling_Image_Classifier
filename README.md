@@ -1,1 +1,1 @@
-# Autoscaling_Image_Classifier
+# Autoscaling Image Classifier
